@@ -18,4 +18,4 @@ awk -v nb=`echo $nb` '{j=1;while(j<=nb){i=j;while(i<=NF){print $i; i=i+nb}print 
 cat tmpkp1 | xargs > tmpkp2
 awk -v nb=`echo $nb` -v nk=`echo $nk` '{j=1;while(j<=nb){i=1;while(i<=nk){print $i; i++}print '\n';j++}}' tmpkp2 > tmpkp3
 # final data with each block representing a band
-paste tmpkp3 tmpba4 > band.dat
+paste -d" " tmpkp3 tmpba4 > band.dat
