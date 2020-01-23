@@ -43,7 +43,7 @@ awk -v nb=`echo $nb` -v EF=`echo $EF` '{\
 # k-point part
 
 # module of nk k-points
-grep -A $nk weights: OUTCAR > tmpkp1
+grep -A $nk 2pi OUTCAR > tmpkp1
 grep -v k tmpkp1 | awk '{printf "%.8f\n",sqrt($1**2+$2**2+$3**2)}' > tmpkp2
 # change y-placement to x-placement of coordinates of k-points
 awk -f ytox.wak tmpkp2 > tmpkp3
