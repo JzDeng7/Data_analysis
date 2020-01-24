@@ -15,6 +15,7 @@ EF=`grep E-fermi OUTCAR | awk '{print $3}'`
 nk=`grep NKPTS OUTCAR | awk '{print $4}'`
 nb=`grep NBANDS OUTCAR | awk '{print $15}'`
 
+nl=`awk 'NR==2' KPOINTS`
 # band energy part
 
 grep -A $nb energies OUTCAR  > tmpba1
@@ -75,19 +76,29 @@ cat kpath1 | sed 's/[ ][ ]*/,/g' > kpath2
 awk -f ytox.wak kpath2 > kpath3
 awk '{gsub(","," "); print $0 }' kpath3 > kpath4
 # determination of k-path
-awk -v nb=`echo $nb` -v nk=`echo $nk` '{\
+awk -v nb=`echo $nb` -v nk=`echo $nk` -v nl=`echo $nl` -v nh=`echo $nk/$nl | bc` '{\
     a=1;\
     while(a<=nb)\
         {\
             print "#Band " a;
             kx=$1;ky=$2;kz=$3;\
             kp=0;deltakp=0;\
+            d=3*nl+1;\
             i=1;j=2;k=3;\
             while(i<=NF)\
-                {i=i+3;j=j+3;k=k+3;\
+                {\
+                    i=i+3;j=j+3;k=k+3;\
                     kp+=deltakp;\
                     printf "%.8f %.8f %.8f %.8f\n", kx,ky,kz,kp;\
-                    deltakp=sqrt(($i-kx)**2+($j-ky)**2+($k-kz)**2);\
+                    if(i==d)\
+                        {\
+                            deltakp=0;\
+                            d+=3*nl;\
+                        }\
+                    else\
+                        {\
+                            deltakp=sqrt(($i-kx)**2+($j-ky)**2+($k-kz)**2);\
+                        }\
                     kx=$i;ky=$j;kz=$k;\
                 }\
                 printf "\n";\
@@ -104,38 +115,12 @@ sed '1i #  kx       ky       kz     k-path   band energies' band.dat > bandstruc
 grep ! KPOINTS | awk '{print $5}' > hsymkp
 
 # number of k-points in one high-symmetry line segment along k-path
-nl=`awk 'NR==2' KPOINTS`
 
 # process of obtaining plot.dat for gnuplot 
-awk '{print $4,$5}' band.dat > tmpplot1
-# change y-placement to x-placement of data of band structure
-cat tmpplot1 | sed 's/[ ][ ]*/,/g' > tmpplot2
-awk -f ytox.wak tmpplot2 > tmpplot3
-awk '{gsub(","," "); print $0 }' tmpplot3 > tmpplot4
-# adding a blank line for each break of k-path
-awk -v nk=`echo $nk` -v nl=`echo $nl` -v nh=`echo $nk/$nl | bc` '{\
-    k=2*nl-1;\
-    for(i=1;i<=NF;i+=2)\
-        {\
-            if(i==k && $i!=$(i+2))\
-                {\
-                    printf "%.8f %.8f\n\n", $i,$(i+1);\
-                    k+=2*nl;\
-                }\
-            else if(i==k && $i==$(i+2))\
-                {\
-                    printf "%.8f %.8f\n", $i,$(i+1);\
-                    k+=2*nl;
-                }\
-            else\
-                {\
-                    printf "%.8f %.8f\n", $i,$(i+1);
-                }\
-        }\
-}' tmpplot4 > plot.dat
+awk '{print $4,$5}' band.dat > plot.dat
 
 # clean up
-rm -rf tmpkp* tmpba* kpath* tmpplot*
+rm -rf tmpkp* tmpba* kpath* band.dat
 
 ## End of program
 endTime=`date +%s%N`
