@@ -107,12 +107,13 @@ awk -v nb=`echo $nb` -v nk=`echo $nk` -v nl=`echo $nl` -v nh=`echo $nk/$nl | bc`
         }' kpath4 > kpath5
 # final data with each block representing a band
 paste -d" " kpath5 tmpba4 > band.dat # tmpba5
-sed '1i #  kx       ky       kz     k-path   band energies' band.dat > bandstruc.dat
+sed '1i#   kx         ky         kz       k-path   band energies' band.dat > bandstruc.dat
 
 ## plot.dat for gnuplot
 
 # high symmetry k-points along k-path
-grep ! KPOINTS | awk '{print $5}' > hsymkp
+tail -n +5 KPOINTS | awk '{print $NF}' > klabel1
+
 
 # number of k-points in one high-symmetry line segment along k-path
 
